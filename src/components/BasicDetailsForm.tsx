@@ -3,11 +3,11 @@ import type { SubmitHandler } from "react-hook-form";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../Firebase/firebase";
 import { useUser } from "@clerk/clerk-react";
-import React, { useState, useEffect, useReducer } from "react";
+import  { useState, useEffect, useReducer } from "react";
 import Toast from "./Toast";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 
 const validationSchema = yup.object({
   firstName: yup
