@@ -1,0 +1,17 @@
+[
+  {
+    "origin": [
+      "http://localhost:5173",
+      "http://localhost:8080",
+      "http://localhost:3000",
+      "http://localhost:4173"
+    ],
+    "method": ["GET", "PUT", "POST", "DELETE", "HEAD", "OPTIONS"],
+    "responseHeader": [
+      "Content-Type",
+      "Content-Disposition",
+      "x-firebase-storage-download-tokens"
+    ],
+    "maxAgeSeconds": 3600
+  }
+] 
