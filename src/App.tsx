@@ -1,5 +1,5 @@
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
-import React, { Suspense, lazy, useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import FirebaseStorageTest from './components/FirebaseStorageTest';
 import Header from './components/Header';
 import { AllSubmissions } from "./components/AllSubmissions";

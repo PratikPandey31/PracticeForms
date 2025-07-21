@@ -225,7 +225,7 @@ export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormPr
     defaultValues: persisted,
   });
 
-  const { watch, reset } = methods;
+  const { watch } = methods;
 
   // Persist form state on change
   useEffect(() => {

@@ -1,5 +1,5 @@
 import { useAuth } from "@clerk/clerk-react";
-import React, { createContext } from "react";
+import { createContext } from "react";
 import type { ReactNode } from "react";
 
 interface ClerkContextType {
