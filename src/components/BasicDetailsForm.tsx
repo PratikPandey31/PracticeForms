@@ -2,12 +2,13 @@ import { useForm, FormProvider, useFormContext } from "react-hook-form";
 import type { SubmitHandler } from "react-hook-form";
 import { addDoc, collection } from "firebase/firestore";
 import { db } from "../Firebase/firebase";
-import { useUser } from "@clerk/clerk-react";
+import { useClerkContext } from "../useClerkContext";
 import  { useState, useEffect, useReducer } from "react";
 import Toast from "./Toast";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { saveFormState, loadFormState, clearFormState } from "./formPersistence";
 
 const validationSchema = yup.object({
   firstName: yup
@@ -193,8 +194,11 @@ function AddressField() {
   );
 }
 
+const FORM_KEY = "basicDetailsFormState";
+
 export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormProps) {
-  const { user } = useUser();
+  const { sessionClaims, isSignedIn } = useClerkContext();
+  const userId = sessionClaims?.sub;
   const queryClient = useQueryClient();
   const [isClosing, setIsClosing] = useState(false);
   const [toast, dispatch] = useReducer(toastReducer, {
@@ -203,20 +207,37 @@ export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormPr
     isVisible: false
   });
 
+  // Load persisted state
+  const persisted = loadFormState<FormInputs>(FORM_KEY, {
+    firstName: "",
+    lastName: null,
+    email: "",
+    phone: "",
+    age: 0,
+    occupation: "",
+    address: "",
+  });
+
   const methods = useForm<FormInputs>({
     resolver: yupResolver(validationSchema),
     mode: "onBlur",
     reValidateMode: "onChange",
-    defaultValues: {
-      firstName: "",
-      lastName: null,
-      email: "",
-      phone: "",
-      age: undefined,
-      occupation: "",
-      address: "",
-    }
+    defaultValues: persisted,
   });
+
+  const { watch, reset } = methods;
+
+  // Persist form state on change
+  useEffect(() => {
+    const subscription = watch((value) => saveFormState(FORM_KEY, value));
+    return () => subscription.unsubscribe();
+  }, [watch]);
+
+  // Recovery: Always clear persisted state on mount (no prompt)
+  useEffect(() => {
+    clearFormState(FORM_KEY);
+    // eslint-disable-next-line
+  }, []);
 
   const {
     handleSubmit,
@@ -224,11 +245,10 @@ export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormPr
 
   const submitMutation = useMutation({
     mutationFn: async (data: FormInputs) => {
-      if (!user) throw new Error("User not authenticated");
+      if (!isSignedIn || !userId) throw new Error("User not authenticated");
       return await addDoc(collection(db, "userDetails"), {
         ...data,
-        userId: user.id,
-        userEmail: user.emailAddresses[0]?.emailAddress,
+        userId,
         createdAt: new Date(),
       });
     },
@@ -236,6 +256,7 @@ export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormPr
       queryClient.invalidateQueries({ queryKey: ['userDetails'] });
       dispatch({ type: 'SHOW_SUCCESS', payload: 'Form submitted successfully!' });
       methods.reset();
+      clearFormState(FORM_KEY);
       setTimeout(() => handleClose(), 1000);
     },
     onError: (error: any) => {
@@ -244,7 +265,7 @@ export default function BasicDetailsForm({ isOpen, onClose }: BasicDetailsFormPr
   });
 
   const onSubmit: SubmitHandler<FormInputs> = async (data: FormInputs) => {
-    if (!user) {
+    if (!isSignedIn || !userId) {
       dispatch({ type: 'SHOW_ERROR', payload: "Please sign in to submit the form." });
       return;
     }

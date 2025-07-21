@@ -1,4 +1,5 @@
 import { OrganizationSwitcher, SignedIn, SignedOut, SignInButton, SignOutButton, UserButton } from '@clerk/clerk-react';
+import React from "react";
 
 interface HeaderProps {
   onStorageTestOpen: () => void;
@@ -32,8 +33,9 @@ export default function Header({ onStorageTestOpen, onFormOpen }: HeaderProps) {
               >
                 Upload
               </button>
+
               <button
-                onClick={onFormOpen}
+                onClick={() => onFormOpen()}
                 className="bg-green-600 text-white px-3 py-2 rounded-lg hover:bg-green-700 transition font-semibold text-sm md:text-base shadow"
               >
                 Form

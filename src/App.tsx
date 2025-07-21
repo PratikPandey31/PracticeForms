@@ -1,12 +1,12 @@
 import { SignedIn, SignedOut } from '@clerk/clerk-react';
-import { useState } from 'react';
+import React, { Suspense, lazy, useState } from 'react';
 import FirebaseStorageTest from './components/FirebaseStorageTest';
-import BasicDetailsForm from './components/BasicDetailsForm';
 import Header from './components/Header';
-import AllSubmissions from "./components/AllSubmissions";
+import { AllSubmissions } from "./components/AllSubmissions";
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import projectArchitectureUrl from './assets/project_architecture.svg';
 const queryClient = new QueryClient();
+const BasicDetailsForm = React.lazy(() => import('./components/BasicDetailsForm'));
 
 export default function App() {
   const [isStorageTestOpen, setIsStorageTestOpen] = useState(false);
@@ -15,12 +15,12 @@ export default function App() {
   const [svgLoaded, setSvgLoaded] = useState(false);
 
   const handleStorageTestOpen = () => {
-    setIsFormOpen(false); 
+    setIsFormOpen(false);
     setIsStorageTestOpen(true);
   };
 
   const handleFormOpen = () => {
-    setIsStorageTestOpen(false); 
+    setIsStorageTestOpen(false);
     setIsFormOpen(true);
   };
 
@@ -31,7 +31,11 @@ export default function App() {
         onStorageTestOpen={handleStorageTestOpen}
         onFormOpen={handleFormOpen}
       />
-       <AllSubmissions />
+      {!isFormOpen && (
+        <Suspense fallback={<div>Loading submissions...</div>}>
+          <AllSubmissions />
+        </Suspense>
+      )}
       
       <main className="flex-1 flex flex-col items-center justify-center">
         <SignedOut>
@@ -83,6 +87,14 @@ export default function App() {
           </div>
         </SignedOut>
         <SignedIn>
+          {isFormOpen && (
+            <Suspense fallback={<div>Loading form...</div>}>
+              <BasicDetailsForm
+                isOpen={true}
+                onClose={() => setIsFormOpen(false)}
+              />
+            </Suspense>
+          )}
         </SignedIn>
       </main>
 
@@ -94,11 +106,6 @@ export default function App() {
       <FirebaseStorageTest 
         isOpen={isStorageTestOpen} 
         onClose={() => setIsStorageTestOpen(false)} 
-      />
-
-      <BasicDetailsForm 
-        isOpen={isFormOpen} 
-        onClose={() => setIsFormOpen(false)} 
       />
     </div>
     </QueryClientProvider>
